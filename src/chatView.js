@@ -1168,18 +1168,20 @@ const ChatView = new Lang.Class({
                 let tags = [this._lookupTag('nick')];
                 let nickTagName = this._getNickTagName(message.nick);
                 let nickTag = this._lookupTag(nickTagName);
+                let buffer = this._view.get_buffer();
 
                 if (!nickTag) {
                     nickTag = new Gtk.TextTag({ name: nickTagName });
 
                     this._updateNickTag(nickTag, this._userTracker.getNickStatus(message.nick));
 
-                    this._view.get_buffer().get_tag_table().add(nickTag);
+                    buffer.get_tag_table().add(nickTag);
                 }
                 tags.push(nickTag);
                 if (needsGap)
                     tags.push(this._lookupTag('gap'));
-                this._insertWithTags(iter, message.nick + '\t', tags);
+                this._insertWithTags(iter, message.nick, tags);
+                buffer.insert(iter, '\t', -1);
             }
             state.lastNick = message.nick;
             tags.push(this._lookupTag('message'));
