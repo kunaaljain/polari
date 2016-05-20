@@ -284,6 +284,7 @@ const ChatView = new Lang.Class({
 
         this._room = room;
         this._state = { lastNick: null, lastTimestamp: 0, lastStatusGroup: 0 };
+        this._fetchingBacklog = false;
         this._joinTime = 0;
         this._maxNickChars = MAX_NICK_CHARS;
         this._hoveredButtonTags = [];
@@ -292,19 +293,13 @@ const ChatView = new Lang.Class({
         this._pendingLogs = [];
         this._initialPending = [];
         this._statusCount = { left: 0, joined: 0, total: 0 };
+        this._logWalker = null;
 
         this._room.account.connect('notify::nickname', Lang.bind(this,
             function() {
                 this._updateMaxNickChars(this._room.account.nickname.length);
             }));
         this._updateMaxNickChars(this._room.account.nickname.length);
-
-        let logManager = LogManager.getDefault();
-        this._logWalker = logManager.walkEvents(room);
-
-        this._fetchingBacklog = true;
-        this._logWalker.getEvents(NUM_INITIAL_LOG_EVENTS,
-                                  Lang.bind(this, this._onLogEventsReady));
 
         this._autoscroll = true;
 
@@ -589,6 +584,18 @@ const ChatView = new Lang.Class({
         this._view.tabs = tabs;
         this._view.indent = -totalWidth;
         this._view.left_margin = MARGIN + totalWidth;
+    },
+
+    _ensureLogWalker: function() {
+        if (this._logWalker)
+            return;
+
+        let logManager = LogManager.getDefault();
+        this._logWalker = logManager.walkEvents(this._room);
+
+        this._fetchingBacklog = true;
+        this._logWalker.getEvents(NUM_INITIAL_LOG_EVENTS,
+                                  Lang.bind(this, this._onLogEventsReady));
     },
 
     _updateScroll: function() {
