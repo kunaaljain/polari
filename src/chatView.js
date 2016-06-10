@@ -709,6 +709,11 @@ const ChatView = new Lang.Class({
 
     _pendingMessageRemoved: function(channel, message) {
         let [id,] = message.get_pending_message_id();
+        this._removePendingMark(id);
+        this._app.withdraw_notification('pending-message-' + id);
+    },
+
+    _removePendingMark: function(id) {
         let mark = this._pending.get(id);
         if (!mark)
             return;
@@ -716,7 +721,6 @@ const ChatView = new Lang.Class({
         if (this._view.buffer.get_iter_at_mark(mark).is_end())
             this._autoscroll = true;
         this._view.buffer.delete_mark(mark);
-        this._app.withdraw_notification('pending-message-' + id);
         this._pending.delete(id);
     },
 
@@ -892,6 +896,11 @@ const ChatView = new Lang.Class({
     _onChannelChanged: function() {
         if (this._channel == this._room.channel)
             return;
+
+        // Pending IDs are invalidated by channel changes, so
+        // remove marks to not get stuck on highlighted messages
+        for (let id of this._pending.entries())
+            this._removePendingMark(id);
 
         if (this._channel) {
             for (let i = 0; i < this._channelSignals.length; i++)
