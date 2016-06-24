@@ -39,6 +39,7 @@ const Application = new Lang.Class({
         GLib.set_application_name('Polari');
         this._window = null;
         this._pendingRequests = {};
+        this._startHidden = false;
     },
 
     vfunc_startup: function() {
@@ -92,6 +93,8 @@ const Application = new Lang.Class({
           { name: 'edit-connection',
             activate: Lang.bind(this, this._onEditConnection),
             parameter_type: GLib.VariantType.new('o') },
+          { name: 'run-in-background',
+            activate: Lang.bind(this, this._onRunInBackground) },
           { name: 'help',
             activate: Lang.bind(this, this._onShowHelp),
             accels: ['F1'] },
@@ -149,11 +152,13 @@ const Application = new Lang.Class({
                         this._pendingRequests[id].cancellable.cancel();
                     this.emit('prepare-shutdown');
             }));
-            this._window.show_all();
+            if (!this._startHidden)
+                this._window.present();
 
             this._chatroomManager.lateInit();
+        } else {
+            this._window.present();
         }
-        this._window.present();
     },
 
     vfunc_open: function(files) {
@@ -593,6 +598,15 @@ const Application = new Lang.Class({
                 w.destroy();
             }));
         dialog.show();
+    },
+
+    _onRunInBackground: function() {
+        if (this._window) {
+            this._window.hide();
+        } else {
+            this._startHidden = true;
+            this.activate();
+        }
     },
 
     _onShowHelp: function() {

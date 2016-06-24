@@ -7,6 +7,11 @@ Type=Application
 MimeType=x-scheme-handler/irc;
 StartupNotify=true
 DBusActivatable=true
+Actions=run-in-background
 X-GNOME-UsesNotifications=true
 Categories=GNOME;GTK;Network;IRCClient;
 Keywords=IRC;Internet;Relay;Chat;
+
+[Desktop Action run-in-background]
+Name=Run in Background
+Exec=gapplication action org.gnome.Polari run-in-background
