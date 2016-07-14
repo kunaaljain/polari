@@ -156,13 +156,9 @@ const MainWindow = new Lang.Class({
             }));
 
         this._accountsMonitor = AccountsMonitor.getDefault();
-        this._accountsMonitor.connect('accounts-changed', Lang.bind(this,
-            function(am) {
-                let accounts = am.dupAccounts();
-                this._roomListRevealer.reveal_child = accounts.some(function(a) {
-                    return a.enabled;
-                });
-            }));
+        this._accountsMonitor.connect('accounts-changed',
+                                      Lang.bind(this, this._onAccountsChanged));
+        this._onAccountsChanged(this._accountsMonitor);
 
         this._roomManager = ChatroomManager.getDefault();
         this._roomManager.connect('active-changed',
@@ -228,6 +224,11 @@ const MainWindow = new Lang.Class({
         this._settings.set_boolean ('window-maximized', this._isMaximized);
         this._settings.set_value('window-size',
                                  GLib.Variant.new('ai', this._currentSize));
+    },
+
+    _onAccountsChanged: function(am) {
+        let accounts = am.dupAccounts();
+        this._roomListRevealer.reveal_child = accounts.some(a => a.enabled);
     },
 
     _updateDecorations: function() {
