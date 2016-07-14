@@ -26,13 +26,6 @@ const RoomStack = new Lang.Class({
         this._sizeGroup = new Gtk.SizeGroup({ mode: Gtk.SizeGroupMode.VERTICAL });
         this._rooms = new Map();
 
-        this._roomManager = ChatroomManager.getDefault();
-
-        this._roomManager.connect('room-added',
-                                  Lang.bind(this, this._roomAdded));
-        this._roomManager.connect('room-removed',
-                                  Lang.bind(this, this._roomRemoved));
-
         this.add_named(new ChatPlaceholder(this._sizeGroup), 'placeholder');
 
         this._entryAreaHeight = 0;
@@ -41,6 +34,17 @@ const RoomStack = new Lang.Class({
                 this._entryAreaHeight = rect.height - 1;
                 this.notify('entry-area-height');
             }));
+
+        this._roomManager = ChatroomManager.getDefault();
+
+        this._roomManager.connect('room-added',
+                                  Lang.bind(this, this._roomAdded));
+        this._roomManager.connect('room-removed',
+                                  Lang.bind(this, this._roomRemoved));
+
+        this._roomManager.forEachRoom(room => {
+            this._roomAdded(this._roomManager, room);
+        });
     },
 
     vfunc_realize: function() {
