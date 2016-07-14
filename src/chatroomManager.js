@@ -486,6 +486,11 @@ const _ChatroomManager = new Lang.Class({
         this._app.active_window.active_room = room;
     },
 
+    forEachRoom: function(func) {
+        for (let room of this._rooms.values())
+            func(room);
+    },
+
     getRoomByName: function(name) {
         for (let room of this._rooms.values())
             if (rooms.channel_name == name)
