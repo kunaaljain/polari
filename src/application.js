@@ -37,7 +37,6 @@ const Application = new Lang.Class({
                       flags: Gio.ApplicationFlags.HANDLES_OPEN });
 
         GLib.set_application_name('Polari');
-        this._window = null;
         this._pendingRequests = {};
         this._startHidden = false;
     },
@@ -144,19 +143,24 @@ const Application = new Lang.Class({
     },
 
     vfunc_activate: function() {
-        if (!this._window) {
-            this._window = new MainWindow.MainWindow({ application: this });
+        let window = this.active_window;
+        if (!window) {
+            window = new MainWindow.MainWindow({ application: this });
             if (!this._startHidden)
-                this._window.present();
+                window.present();
 
             this._chatroomManager.lateInit();
         } else {
-            this._window.present();
+            this.get_windows().reverse().forEach(w => { w.show(); });
+            window.present();
         }
     },
 
     vfunc_window_removed: function(window) {
         this.parent(window);
+
+        if (this.active_window)
+            return;
 
         for (let id in this._pendingRequests)
             this._pendingRequests[id].cancellable.cancel();
@@ -307,7 +311,7 @@ const Application = new Lang.Class({
     },
 
     _onShowJoinDialog: function() {
-        this._window.showJoinRoomDialog();
+        this.active_window.showJoinRoomDialog();
     },
 
     _savedChannelIndex: function(savedChannels, account, channel) {
@@ -594,7 +598,7 @@ const Application = new Lang.Class({
         let factory = Tp.AccountManager.dup().get_factory();
         let account = factory.ensure_account(accountPath, []);
         let dialog = new Connections.ConnectionProperties(account);
-        dialog.transient_for = this._window;
+        dialog.transient_for = this.active_window;
         dialog.connect('response', Lang.bind(this,
             function(w, response) {
                 w.destroy();
@@ -603,8 +607,8 @@ const Application = new Lang.Class({
     },
 
     _onRunInBackground: function() {
-        if (this._window) {
-            this._window.hide();
+        if (this.active_window) {
+            this.get_windows().forEach(w => { w.hide(); });
         } else {
             this._startHidden = true;
             this.activate();
@@ -649,7 +653,7 @@ const Application = new Lang.Class({
             website_label: _("Learn more about Polari"),
             website: 'https://wiki.gnome.org/Apps/Polari',
 
-            transient_for: this._window,
+            transient_for: this.active_window,
             modal: true
         };
 
@@ -662,6 +666,6 @@ const Application = new Lang.Class({
     },
 
     _onQuit: function() {
-        this._window.destroy();
+        this.get_windows().forEach(w => { w.destroy(); });
     }
 });
