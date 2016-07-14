@@ -232,7 +232,8 @@ const JoinDialog = new Lang.Class({
             this._connectionCombo.append(names[i], names[i]);
         this._connectionCombo.sensitive = names.length > 1;
 
-        let activeRoom = this._roomManager.getActiveRoom();
+        let activeRoom = this.transient_for ? this.transient_for.active_room
+                                            : null;
         let activeIndex = 0;
         if(activeRoom)
             activeIndex = Math.max(names.indexOf(activeRoom.account.display_name), 0);

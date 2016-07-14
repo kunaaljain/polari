@@ -364,8 +364,6 @@ const RoomList = new Lang.Class({
                                   Lang.bind(this, this._roomAdded));
         this._roomManager.connect('room-removed',
                                   Lang.bind(this, this._roomRemoved));
-        this._roomManager.connect('active-changed',
-                                  Lang.bind(this, this._activeRoomChanged));
 
         let action = Gio.Application.get_default().lookup_action('leave-room');
         action.connect('activate', Lang.bind(this, this._onLeaveActivated));
@@ -375,6 +373,10 @@ const RoomList = new Lang.Class({
         this.parent();
 
         let toplevel = this.get_toplevel();
+        toplevel.connect('notify::active-room',
+                         Lang.bind(this, this._activeRoomChanged));
+        this._activeRoomChanged();
+
         let actions = [
             { name: 'next-room',
               handler: () => { this._moveSelection(Gtk.DirectionType.DOWN); } },
@@ -464,8 +466,8 @@ const RoomList = new Lang.Class({
         if (this._roomManager.roomCount == 0)
             return;
 
-        let activeRoom = this._roomManager.getActiveRoom();
-        let current = this._roomRows[activeRoom.id];
+        let toplevel = this.get_toplevel();
+        let current = this._roomRows[toplevel.active_room.id];
 
         if (current != row)
             return;
@@ -481,7 +483,7 @@ const RoomList = new Lang.Class({
         let newSelected = this.get_selected_row();
         if (newSelected != row)
             newActive = newSelected.room;
-        this._roomManager.setActiveRoom(newActive);
+        toplevel.active_room = newActive;
 
         if (selected != row)
             this.select_row(selected);
@@ -553,7 +555,8 @@ const RoomList = new Lang.Class({
         this._placeholders[account].visible = !hasRooms;
     },
 
-    _activeRoomChanged: function(roomManager, room) {
+    _activeRoomChanged: function() {
+        let room = this.get_toplevel().active_room;
         if (!room)
             return;
         let row = this._roomRows[room.id];
@@ -566,7 +569,7 @@ const RoomList = new Lang.Class({
     },
 
     vfunc_row_selected: function(row) {
-        this._roomManager.setActiveRoom(row ? row.room : null);
+        this.get_toplevel().active_room = row ? row.room : null;
         if (row)
             row.selected();
     },
