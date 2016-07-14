@@ -52,6 +52,8 @@ const RoomStack = new Lang.Class({
                          Lang.bind(this, this._activeRoomChanged));
         toplevel.connect('active-room-state-changed',
                          Lang.bind(this, this._updateSensitivity));
+        this._activeRoomChanged();
+        this._updateSensitivity();
     },
 
     get entry_area_height() {
