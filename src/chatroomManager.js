@@ -145,7 +145,7 @@ const _ChatroomManager = new Lang.Class({
     Name: '_ChatroomManager',
 
     _init: function() {
-        this._rooms = {};
+        this._rooms = new Map();
         this._activeRoom = null;
 
         this._app = Gio.Application.get_default();
@@ -250,11 +250,9 @@ const _ChatroomManager = new Lang.Class({
     },
 
     _onAccountDisabled: function(am, account) {
-        for (let id in this._rooms) {
-            let room = this._rooms[id];
+        for (let room of this._rooms.values())
             if (room.account == account)
                 this._removeRoom(room);
-        }
     },
 
     _restoreSavedChannels: function(account) {
@@ -335,12 +333,13 @@ const _ChatroomManager = new Lang.Class({
 
     _onLeaveActivated: function(action, parameter) {
         let [id, ] = parameter.deep_unpack();
-        let room = this._rooms[id];
+        let room = this._rooms.get(id);
         this._removeRoom(room);
     },
 
     _ensureRoom: function(account, channelName, type) {
-        let room = this._rooms[Polari.create_room_id(account, channelName, type)];
+        let id = Polari.create_room_id(account, channelName, type);
+        let room = this._rooms.get(id);
         if (room)
             return room;
 
@@ -440,7 +439,7 @@ const _ChatroomManager = new Lang.Class({
     },
 
     _addRoom: function(room) {
-        if (this._rooms[room.id])
+        if (this._rooms.has(room.id))
             return;
 
         room._channelChangedId = room.connect('notify::channel', Lang.bind(this,
@@ -449,7 +448,7 @@ const _ChatroomManager = new Lang.Class({
                     this.emit('active-state-changed');
             }));
 
-        this._rooms[room.id] = room;
+        this._rooms.set(room.id, room);
         this.emit('room-added', room);
 
         if (this.roomCount == 1)
@@ -457,7 +456,7 @@ const _ChatroomManager = new Lang.Class({
     },
 
     _removeRoom: function(room) {
-        if (!this._rooms[room.id])
+        if (!this._rooms.delete(room.id))
             return;
 
         if (room == this._lastActiveRoom)
@@ -465,7 +464,6 @@ const _ChatroomManager = new Lang.Class({
 
         room.disconnect(room._channelChangedId);
         delete room._channelChangedId;
-        delete this._rooms[room.id];
         this.emit('room-removed', room);
     },
 
@@ -497,18 +495,18 @@ const _ChatroomManager = new Lang.Class({
     },
 
     getRoomByName: function(name) {
-        for (let id in this._rooms)
-            if (this._rooms[id].channel_name == name)
-                return this._rooms[id];
+        for (let room of this._rooms.values())
+            if (rooms.channel_name == name)
+                return room;
         return null;
     },
 
     getRoomById: function(id) {
-        return this._rooms[id];
+        return this._rooms.get(id);
     },
 
     get roomCount() {
-        return Object.keys(this._rooms).length;
+        return this._rooms.size;
     }
 });
 Signals.addSignalMethods(_ChatroomManager.prototype);
