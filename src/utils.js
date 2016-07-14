@@ -180,7 +180,7 @@ function openURL(url, timestamp) {
     } catch(e) {
         let n = new AppNotifications.SimpleOutput(_("Failed to open link"));
         let app = Gio.Application.get_default();
-        app.notificationQueue.addNotification(n);
+        app.active_window.notificationQueue.addNotification(n);
         debug("failed to open %s: %s".format(url, e.message));
     }
 }

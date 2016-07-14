@@ -57,8 +57,6 @@ const Application = new Lang.Class({
         this._settings = new Gio.Settings({ schema_id: 'org.gnome.Polari' });
 
         this.pasteManager = new PasteManager.PasteManager();
-        this.notificationQueue = new AppNotifications.NotificationQueue();
-        this.commandOutputQueue = new AppNotifications.CommandOutputQueue();
 
         let actionEntries = [
           { name: 'show-join-dialog',
@@ -237,7 +235,7 @@ const Application = new Lang.Class({
             let label = _("Failed to open link");
             let n = new AppNotifications.MessageNotification(label,
                                                              'dialog-error-symbolic');
-            this.notificationQueue.addNotification(n);
+            this.active_window.notificationQueue.addNotification(n);
         }
 
         return [success, server, port, room];
@@ -578,7 +576,7 @@ const Application = new Lang.Class({
             function() {
                 let label = _("%s removed.").format(account.display_name);
                 let n = new AppNotifications.UndoNotification(label);
-                this.notificationQueue.addNotification(n);
+                this.active_window.notificationQueue.addNotification(n);
 
                 n.connect('closed', function() {
                     account.remove_async(function(a, res) {
