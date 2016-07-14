@@ -59,9 +59,6 @@ const Application = new Lang.Class({
         this.pasteManager = new PasteManager.PasteManager();
 
         let actionEntries = [
-          { name: 'show-join-dialog',
-            activate: Lang.bind(this, this._onShowJoinDialog),
-            accels: ['<Primary>n'] },
           { name: 'join-room',
             activate: Lang.bind(this, this._onJoinRoom),
             parameter_type: GLib.VariantType.new('(ssu)') },
@@ -71,19 +68,10 @@ const Application = new Lang.Class({
           { name: 'leave-room',
             activate: Lang.bind(this, this._onLeaveRoom),
             parameter_type: GLib.VariantType.new('(ss)') },
-          { name: 'leave-current-room',
-            activate: Lang.bind(this, this._onLeaveCurrentRoom),
-            create_hook: Lang.bind(this, this._leaveRoomCreateHook),
-            accels: ['<Primary>w'] },
           { name: 'authenticate-account',
             parameter_type: GLib.VariantType.new('(os)') },
           { name: 'reconnect-account',
             parameter_type: GLib.VariantType.new('o') },
-          { name: 'user-list',
-            activate: Lang.bind(this, this._onToggleAction),
-            create_hook: Lang.bind(this, this._userListCreateHook),
-            state: GLib.Variant.new('b', false),
-            accels: ['F9', '<Primary>u'] },
           { name: 'remove-connection',
             activate: Lang.bind(this, this._onRemoveConnection),
             parameter_type: GLib.VariantType.new('o') },
@@ -99,26 +87,12 @@ const Application = new Lang.Class({
             activate: Lang.bind(this, this._onShowAbout) },
           { name: 'quit',
             activate: Lang.bind(this, this._onQuit),
-            accels: ['<Primary>q'] },
-          { name: 'next-room',
-            accels: ['<Primary>Page_Down', '<Alt>Down'] },
-          { name: 'previous-room',
-            accels: ['<Primary>Page_Up', '<Alt>Up'] },
-          { name: 'first-room',
-            accels: ['<Primary>Home'] },
-          { name: 'last-room',
-            accels: ['<Primary>End'] },
-          { name: 'nth-room',
-            parameter_type: GLib.VariantType.new('i') },
-          { name: 'next-pending-room',
-            accels: ['<Alt><Shift>Down', '<Primary><Shift>Page_Down']},
-          { name: 'previous-pending-room',
-            accels: ['<Alt><Shift>Up', '<Primary><Shift>Page_Up']}
+            accels: ['<Primary>q'] }
         ];
         Utils.addActionEntries(this, 'app', actionEntries);
 
         for (let i = 1; i < 10; i++)
-            this.set_accels_for_action('app.nth-room(%d)'.format(i), ['<Alt>' + i]);
+            this.set_accels_for_action('win.nth-room(%d)'.format(i), ['<Alt>' + i]);
     },
 
     vfunc_activate: function() {
@@ -262,35 +236,6 @@ const Application = new Lang.Class({
             function(a) {
                 return a.enabled;
             }).length > 0;
-    },
-
-    _leaveRoomCreateHook: function(action) {
-        this._chatroomManager.connect('active-changed', Lang.bind(this,
-            function() {
-                action.enabled = this._chatroomManager.getActiveRoom() != null;
-            }));
-        action.enabled = this._chatroomManager.getActiveRoom() != null;
-    },
-
-    _updateUserListAction: function(action) {
-        let room = this._chatroomManager.getActiveRoom();
-        action.enabled = room && room.type == Tp.HandleType.ROOM && room.channel;
-    },
-
-    _userListCreateHook: function(action) {
-        this._chatroomManager.connect('active-state-changed', Lang.bind(this,
-            function() {
-                this._updateUserListAction(action);
-            }));
-        action.connect('notify::enabled', function() {
-            if (!action.enabled)
-                action.change_state(GLib.Variant.new('b', false));
-        });
-        this._updateUserListAction(action);
-    },
-
-    _onShowJoinDialog: function() {
-        this.active_window.showJoinRoomDialog();
     },
 
     _savedChannelIndex: function(savedChannels, account, channel) {
@@ -534,19 +479,6 @@ const Application = new Lang.Class({
                 }));
         }
         this._removeSavedChannel(room.account, room.channel_name);
-    },
-
-    _onLeaveCurrentRoom: function() {
-        let room = this._chatroomManager.getActiveRoom();
-        if (!room)
-            return;
-        let action = this.lookup_action('leave-room');
-        action.activate(GLib.Variant.new('(ss)', [room.id, '']));
-    },
-
-    _onToggleAction: function(action) {
-        let state = action.get_state();
-        action.change_state(GLib.Variant.new('b', !state.get_boolean()));
     },
 
     _onRemoveConnection: function(action, parameter){
