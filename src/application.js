@@ -78,6 +78,8 @@ const Application = new Lang.Class({
           { name: 'edit-connection',
             activate: Lang.bind(this, this._onEditConnection),
             parameter_type: GLib.VariantType.new('o') },
+          { name: 'new-window',
+            activate: Lang.bind(this, this._onNewWindow) },
           { name: 'run-in-background',
             activate: Lang.bind(this, this._onRunInBackground) },
           { name: 'help',
@@ -515,6 +517,15 @@ const Application = new Lang.Class({
                 w.destroy();
             }));
         dialog.show();
+    },
+
+    _onNewWindow: function() {
+        this.get_windows().reverse().forEach(w => { w.show(); });
+
+        let activeRoom = this.active_window.active_room;
+        let window = new MainWindow.MainWindow({ application: this,
+                                                 active_room: activeRoom });
+        window.present();
     },
 
     _onRunInBackground: function() {
