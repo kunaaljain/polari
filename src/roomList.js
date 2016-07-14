@@ -339,21 +339,15 @@ const RoomList = new Lang.Class({
         this._roomRows = {};
 
         this._accountsMonitor = AccountsMonitor.getDefault();
-        this._accountsMonitor.connect('account-manager-prepared', Lang.bind(this,
-            function(mon, am) {
-                let accounts = this._accountsMonitor.dupAccounts();
-                for (let i = 0; i < accounts.length; i++)
-                    this._accountAdded(mon, accounts[i]);
+        let feature = Tp.AccountManager.get_feature_quark_core();
+        let mon = this._accountsMonitor;
 
-                am.connect('account-enabled', Lang.bind(this,
-                    function(am, account) {
-                        this._updatePlaceholderVisibility(account);
-                    }));
-                am.connect('account-disabled', Lang.bind(this,
-                    function(am, account) {
-                        this._updatePlaceholderVisibility(account);
-                    }));
-            }));
+        if (mon.accountManager.is_prepared(feature))
+            this._onAccountManagerPrepared(mon, mon.accountManager);
+        else
+            mon.connect('account-manager-prepared',
+                        Lang.bind(this, this._onAccountManagerPrepared));
+
         this._accountsMonitor.connect('account-added',
                                       Lang.bind(this, this._accountAdded));
         this._accountsMonitor.connect('account-removed',
@@ -367,6 +361,19 @@ const RoomList = new Lang.Class({
 
         let action = Gio.Application.get_default().lookup_action('leave-room');
         action.connect('activate', Lang.bind(this, this._onLeaveActivated));
+    },
+
+    _onAccountManagerPrepared: function(mon, am) {
+        let accounts = this._accountsMonitor.dupAccounts();
+        for (let i = 0; i < accounts.length; i++)
+            this._accountAdded(mon, accounts[i]);
+
+        am.connect('account-enabled', (am, account) => {
+                this._updatePlaceholderVisibility(account);
+            });
+        am.connect('account-disabled', (am, account) => {
+                this._updatePlaceholderVisibility(account);
+            });
     },
 
     vfunc_realize: function() {
