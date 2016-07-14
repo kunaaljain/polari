@@ -146,12 +146,6 @@ const Application = new Lang.Class({
     vfunc_activate: function() {
         if (!this._window) {
             this._window = new MainWindow.MainWindow({ application: this });
-            this._window.connect('destroy', Lang.bind(this,
-                function() {
-                    for (let id in this._pendingRequests)
-                        this._pendingRequests[id].cancellable.cancel();
-                    this.emit('prepare-shutdown');
-            }));
             if (!this._startHidden)
                 this._window.present();
 
@@ -159,6 +153,14 @@ const Application = new Lang.Class({
         } else {
             this._window.present();
         }
+    },
+
+    vfunc_window_removed: function(window) {
+        this.parent(window);
+
+        for (let id in this._pendingRequests)
+            this._pendingRequests[id].cancellable.cancel();
+        this.emit('prepare-shutdown');
     },
 
     vfunc_open: function(files) {
