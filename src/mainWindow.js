@@ -114,7 +114,12 @@ const MainWindow = new Lang.Class({
                                                 'active-room',
                                                 'active-room',
                                                 GObject.ParamFlags.READWRITE,
-                                                Polari.Room.$gtype)
+                                                Polari.Room.$gtype),
+        'active-room-id': GObject.ParamSpec.string('active-room-id',
+                                                   'active-room-id',
+                                                   'active-room-id',
+                                                   GObject.ParamFlags.READABLE,
+                                                   '')
     },
     Signals: { 'active-room-state-changed': {} },
 
@@ -301,6 +306,7 @@ const MainWindow = new Lang.Class({
         this._updateTitlebar();
 
         this.notify('active-room');
+        this.notify('active-room-id');
         this.emit('active-room-state-changed');
 
         if (!this._room)
@@ -320,6 +326,10 @@ const MainWindow = new Lang.Class({
                 this._updateUserListLabel();
                 this.emit('active-room-state-changed');
             });
+    },
+
+    get active_room_id() {
+        return this._room ? this._room.id : '';
     },
 
     _addApplicationStyle: function() {
