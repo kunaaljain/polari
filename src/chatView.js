@@ -1212,8 +1212,6 @@ const ChatView = new Lang.Class({
 
     _insertTpMessage: function(tpMessage) {
         let message = this._createMessage(tpMessage);
-        let shouldHighlight = this._room.should_highlight_message(message.nick,
-                                                                  message.text);
 
         this._ensureNewLine();
 
@@ -1221,8 +1219,12 @@ const ChatView = new Lang.Class({
         this._insertMessage(iter, message, this._state);
         this._trackContact(tpMessage.sender);
 
-        if (shouldHighlight &&
-            !(this._toplevelFocus && this._active)) {
+        let highlight = this._room.should_highlight_message(message.nick,
+                                                            message.text);
+        let visible = this._toplevelFocus && this._active && this._autoscroll;
+        let toplevelActive = this.get_toplevel() == this._app.active_window;
+
+        if (highlight && !visible && toplevelActive) {
             let summary = '%s %s'.format(this._room.display_name, message.nick);
             let notification = new Gio.Notification();
             notification.set_title(summary);
