@@ -338,6 +338,12 @@ const RoomList = new Lang.Class({
         this._placeholders = new Map();
         this._roomRows = new Map();
 
+        this._roomManager = ChatroomManager.getDefault();
+        this._roomManager.connect('room-added',
+                                  Lang.bind(this, this._roomAdded));
+        this._roomManager.connect('room-removed',
+                                  Lang.bind(this, this._roomRemoved));
+
         this._accountsMonitor = AccountsMonitor.getDefault();
         let feature = Tp.AccountManager.get_feature_quark_core();
         let mon = this._accountsMonitor;
@@ -352,12 +358,6 @@ const RoomList = new Lang.Class({
                                       Lang.bind(this, this._accountAdded));
         this._accountsMonitor.connect('account-removed',
                                       Lang.bind(this, this._accountRemoved));
-
-        this._roomManager = ChatroomManager.getDefault();
-        this._roomManager.connect('room-added',
-                                  Lang.bind(this, this._roomAdded));
-        this._roomManager.connect('room-removed',
-                                  Lang.bind(this, this._roomRemoved));
 
         let action = Gio.Application.get_default().lookup_action('leave-room');
         action.connect('activate', Lang.bind(this, this._onLeaveActivated));
@@ -374,6 +374,10 @@ const RoomList = new Lang.Class({
         am.connect('account-disabled', (am, account) => {
                 this._updatePlaceholderVisibility(account);
             });
+
+       this._roomManager.forEachRoom(room => {
+           this._roomAdded(this._roommanager, room);
+       });
     },
 
     vfunc_realize: function() {
