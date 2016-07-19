@@ -327,6 +327,11 @@ const MainWindow = new Lang.Class({
         this._membersChangedId = 0;
         this._channelChangedId = 0;
 
+        if (this._singleRoom) {
+            if (this._room && (!room || this._room.id != room.id))
+                this.destroy();
+        }
+
         this._room = room;
 
         this._updateTitlebar();
