@@ -483,7 +483,7 @@ const _ChatroomManager = new Lang.Class({
     },
 
     _setActiveRoom: function(room) {
-        this._app.active_window.active_room = room;
+        this._app.active_main_window.active_room = room;
     },
 
     forEachRoom: function(func) {
