@@ -346,6 +346,12 @@ const RoomList = new Lang.Class({
         this._roomManager.connect('room-removed',
                                   Lang.bind(this, this._roomRemoved));
 
+        this._app = Gio.Application.get_default();
+        this._app.connect('room-attached',
+                          Lang.bind(this, this._roomAdded));
+        this._app.connect('room-detached',
+                          Lang.bind(this, this._roomRemoved));
+
         this._accountsMonitor = AccountsMonitor.getDefault();
         let feature = Tp.AccountManager.get_feature_quark_core();
         let mon = this._accountsMonitor;
@@ -361,7 +367,7 @@ const RoomList = new Lang.Class({
         this._accountsMonitor.connect('account-removed',
                                       Lang.bind(this, this._accountRemoved));
 
-        let action = Gio.Application.get_default().lookup_action('leave-room');
+        let action = this._app.lookup_action('leave-room');
         action.connect('activate', Lang.bind(this, this._onLeaveActivated));
     },
 
@@ -478,6 +484,8 @@ const RoomList = new Lang.Class({
             return;
 
         let toplevel = this.get_toplevel();
+        if (toplevel.single_room)
+            return;
         let current = this._roomRows.get(toplevel.active_room_id);
 
         if (current != row)
