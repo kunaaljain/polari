@@ -17,7 +17,9 @@
         <property name="visible">True</property>
         <child>
           <object class="GtkHeaderBar" id="titlebarLeft">
-            <property name="visible">True</property>
+            <property name="visible" bind-source="Gjs_MainWindow"
+                      bind-property="single-room"
+                      bind-flags="sync-create|invert-boolean"/>
             <property name="hexpand">False</property>
             <property name="show-close-button">True</property>
             <child>
@@ -51,7 +53,9 @@
         </child>
         <child>
           <object class="GtkSeparator">
-            <property name="visible">True</property>
+            <property name="visible" bind-source="Gjs_MainWindow"
+                      bind-property="single-room"
+                      bind-flags="sync-create|invert-boolean"/>
             <property name="orientation">vertical</property>
           </object>
         </child>
