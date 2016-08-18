@@ -112,12 +112,18 @@ const UserDetails = new Lang.Class({
                        'detailsGrid',
                        'fullnameLabel',
                        'lastLabel',
+                       'notificationLabel',
                        'messageButton'],
     Properties: { 'expanded': GObject.ParamSpec.boolean('expanded',
                                                         'expanded',
                                                         'expanded',
                                                         READWRITE,
-                                                        false)},
+                                                        false),
+                  'notifications-enabled': GObject.ParamSpec.boolean('notifications-enabled',
+                                                             'notifications-enabled',
+                                                             'notifications-enabled',
+                                                             READWRITE,
+                                                             false)},
 
     _init: function(params = {}) {
         let user = params.user;
@@ -135,6 +141,21 @@ const UserDetails = new Lang.Class({
 
         this._updateButtonVisibility();
         this._detailsGrid.hide();
+    },
+
+    get notifications_enabled() {
+        return this._notificationsEnabled;
+    },
+
+    set notifications_enabled(value) {
+        if (this._notificationsEnabled == value)
+            return;
+
+        this._notificationsEnabled = value;
+
+        this.notify('notifications-enabled');
+
+        this._notificationLabel.opacity = value ? 1. : 0.;
     },
 
     set user(user) {
@@ -155,6 +176,7 @@ const UserDetails = new Lang.Class({
             this._expand();
 
         this._updateButtonVisibility();
+        this._notificationLabel.visible = this._user == null;
         this._lastLabel.visible = this._user != null;
     },
 
@@ -308,6 +330,7 @@ const UserPopover = new Lang.Class({
     Template: 'resource:///org/gnome/Polari/ui/user-popover.ui',
     InternalChildren: ['nickLabel',
                        'statusLabel',
+                       'notifyButton',
                        'userDetails'],
 
     _init: function(params) {
@@ -344,6 +367,9 @@ const UserPopover = new Lang.Class({
         this._nickname = nickname;
         this._nickLabel.label = this._nickname;
         this._userDetails.nickname = nickname;
+
+        let actionName = this._userTracker.getNotifyActionName(this._nickname);
+        this._notifyButton.action_name = actionName;
 
         this._setBasenick(Polari.util_get_basenick(nickname));
     },
